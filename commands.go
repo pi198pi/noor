@@ -529,7 +529,11 @@ func handleImageCommand(args string, cfg *Config, messages *[]Message, mcp *MCPC
 		generateImage([]Message{msg}, api, cfg)
 	} else {
 		*messages = append(*messages, msg)
-		_, cost := sendMessage(context.Background(), api, cfg, messages, mcp)
+		var currentCost float64
+		if sessionCost != nil {
+			currentCost = *sessionCost
+		}
+		_, cost := sendMessage(context.Background(), api, cfg, messages, mcp, currentCost)
 		if sessionCost != nil {
 			*sessionCost += cost
 		}
@@ -600,7 +604,11 @@ func handleRetryCommand(cfg *Config, messages *[]Message, mcp *MCPClient, api *A
 	// Truncate everything after the last user message (drops assistant + tool messages)
 	*messages = (*messages)[:lastUserIdx+1]
 
-	_, cost := sendMessage(context.Background(), api, cfg, messages, mcp)
+	var currentCost float64
+	if sessionCost != nil {
+		currentCost = *sessionCost
+	}
+	_, cost := sendMessage(context.Background(), api, cfg, messages, mcp, currentCost)
 	if sessionCost != nil {
 		*sessionCost += cost
 	}
@@ -639,7 +647,11 @@ func handleEditCommand(cfg *Config, messages *[]Message, mcp *MCPClient, api *AP
 	*messages = (*messages)[:lastUserIdx]
 	*messages = append(*messages, Message{Role: "user", Content: sanitize(newText)})
 
-	_, cost := sendMessage(context.Background(), api, cfg, messages, mcp)
+	var currentCost float64
+	if sessionCost != nil {
+		currentCost = *sessionCost
+	}
+	_, cost := sendMessage(context.Background(), api, cfg, messages, mcp, currentCost)
 	if sessionCost != nil {
 		*sessionCost += cost
 	}

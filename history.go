@@ -18,7 +18,12 @@ type Session struct {
 	Messages  []Message `json:"messages"`
 }
 
+var historyDirOverride string // test hook
+
 func historyDir() string {
+	if historyDirOverride != "" {
+		return historyDirOverride
+	}
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return ""

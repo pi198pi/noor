@@ -91,7 +91,7 @@ func chatLoop(cfg *Config, mcp *MCPClient) {
 			}
 		}()
 
-		response, cost := sendMessage(ctx, apiClient, cfg, &messages, mcp)
+		response, cost := sendMessage(ctx, apiClient, cfg, &messages, mcp, sessionCost)
 		signal.Stop(sigCh)
 		cancel()
 
@@ -145,7 +145,7 @@ func setupSignals(mcp *MCPClient) {
 
 // sendMessage sends a single user prompt to the API, handles streaming and
 // any tool-call loops, and returns the assistant response and cost.
-func sendMessage(ctx context.Context, api *APIClient, cfg *Config, messages *[]Message, mcp *MCPClient) (string, float64) {
+func sendMessage(ctx context.Context, api *APIClient, cfg *Config, messages *[]Message, mcp *MCPClient, sessionCost float64) (string, float64) {
 	tools := buildTools(cfg, mcp)
 	toolCallCount := 0
 	forcedSummary := false
@@ -164,7 +164,7 @@ func sendMessage(ctx context.Context, api *APIClient, cfg *Config, messages *[]M
 		// No tool calls — we're done
 		if len(result.ToolCalls) == 0 {
 			*messages = append(*messages, Message{Role: "assistant", Content: result.Content})
-			assistantFooter(time.Since(start), result.Tokens, approxTokens(*messages), cfg.Model, result.Cost)
+			assistantFooter(time.Since(start), result.Tokens, approxTokens(*messages), cfg.Model, result.Cost, sessionCost+result.Cost)
 			return result.Content, result.Cost
 		}
 

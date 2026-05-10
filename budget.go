@@ -14,7 +14,12 @@ type budgetData struct {
 	Daily map[string]float64 `json:"daily"` // YYYY-MM-DD → USD
 }
 
+var budgetPathOverride string // test hook
+
 func budgetPath() string {
+	if budgetPathOverride != "" {
+		return budgetPathOverride
+	}
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return ""

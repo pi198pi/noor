@@ -14,7 +14,7 @@ import (
 )
 
 // MCPCallTimeout is the maximum time an MCP call may take before aborting.
-const MCPCallTimeout = 5 * time.Minute
+var MCPCallTimeout = 5 * time.Minute
 
 type Tool struct {
 	Type     string       `json:"type"`
@@ -306,6 +306,10 @@ func (c *MCPClient) Close() {
 	c.closeOnce.Do(func() {
 		close(c.closed)
 		c.stdin.Close()
+
+		if c.cmd == nil {
+			return
+		}
 
 		done := make(chan error, 1)
 		go func() { done <- c.cmd.Wait() }()

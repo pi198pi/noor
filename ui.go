@@ -257,8 +257,8 @@ func formatCost(c float64) string {
 
 // ─── Assistant Footer ─────────────────────────────────────────────────────────
 
-func assistantFooter(elapsed time.Duration, tokens int, ctxTokens int, model string, cost float64) {
-	// Line 1: timing · tokens · rate · cost
+func assistantFooter(elapsed time.Duration, tokens int, ctxTokens int, model string, cost float64, sessionTotal float64) {
+	// Line 1: timing · tokens · rate · cost · total
 	parts := []string{styleTemp.Render(fmt.Sprintf("%.1fs", elapsed.Seconds()))}
 	if tokens > 0 {
 		parts = append(parts, styleTemp.Render(fmt.Sprintf("%dt", tokens)))
@@ -269,6 +269,9 @@ func assistantFooter(elapsed time.Duration, tokens int, ctxTokens int, model str
 	}
 	if s := formatCost(cost); s != "" {
 		parts = append(parts, styleSuccess.Render(s))
+	}
+	if sessionTotal > 0 {
+		parts = append(parts, styleDim.Render(formatCost(sessionTotal)+" total"))
 	}
 	fmt.Printf("%s\n", styleDim.Render(strings.Join(parts, "  ·  ")))
 
