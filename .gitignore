@@ -1,0 +1,24 @@
+# Build artifacts
+noor
+llm
+*.exe
+
+# Go
+/vendor/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test artifacts
+*.test
+*.out
+coverage.html
+coverage.out
