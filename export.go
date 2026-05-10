@@ -47,6 +47,11 @@ func ExportResponse(content, model, filename string) error {
 
 	ext := strings.ToLower(filepath.Ext(filename))
 
+	// Markdown export — write raw markdown as-is
+	if ext == ".md" {
+		return writeFile(filename, content)
+	}
+
 	// Code file — extract first code block or fall back to raw content
 	if ext != "" && ext != ".html" {
 		code := extractCodeBlock(content)

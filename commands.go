@@ -851,7 +851,7 @@ func printHelp(cfg *Config, mcp *MCPClient) {
 		{"/mcp [cmd|stop]", "Start, stop, or show status of MCP server"},
 		{"/image <path> [prompt]", "Analyze image or edit it (image models)"},
 		{"/imagine <prompt>", "Generate an image (image models)"},
-		{"/export [file]", "Export — default .html, or .py/.js/.go to extract code"},
+		{"/export [file]", "Export — default .html, or .md/.py/.js/.go"},
 		{"/copy", "Copy last response to clipboard"},
 		{"/retry", "Regenerate last response"},
 		{"/edit", "Edit last message and regenerate"},

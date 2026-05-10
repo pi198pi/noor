@@ -94,7 +94,7 @@ noor --mcp-server "python3 mcp_security.py"  # with MCP server
 | `/mcp [cmd\|stop]` | Start/stop an MCP server live (e.g. `/mcp python3 mcp.py`) |
 | `/image <path> [prompt]` | Analyze image or edit it (image models) |
 | `/imagine <prompt>` | Generate an image (image models) |
-| `/export [file]` | Export — default `.html`, or `.py`/`.js`/`.go` to extract code |
+| `/export [file]` | Export — default `.html`, or `.md`/`.py`/`.js`/`.go` |
 | `/copy` | Copy last response to clipboard |
 | `/retry` | Regenerate last response with same prompt |
 | `/edit` | Edit your last message and regenerate |

@@ -446,7 +446,7 @@ func showHelpText() {
 		{"/mcp [cmd|stop]", "Start/stop MCP server (e.g. /mcp python3 mcp.py)"},
 		{"/image <path> [prompt]", "Analyze image or edit it (image models)"},
 		{"/imagine <prompt>", "Generate an image (image models)"},
-		{"/export [file]", "Export — default .html, or .py/.js/.go to extract code"},
+		{"/export [file]", "Export — default .html, or .md/.py/.js/.go"},
 		{"/copy", "Copy last response to clipboard"},
 		{"/retry", "Regenerate last response"},
 		{"/edit", "Edit last message and regenerate"},
