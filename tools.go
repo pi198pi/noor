@@ -19,6 +19,10 @@ import (
 
 var httpClient = &http.Client{Timeout: 15 * time.Second}
 
+// pluginTools is cached after first load to avoid re-reading the plugins dir
+// on every chat turn.
+var pluginTools []Tool
+
 // ─── Web Search ──────────────────────────────────────────────────────────────
 
 var builtinWebSearchTool = Tool{

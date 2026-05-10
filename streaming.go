@@ -34,9 +34,13 @@ func streamResponse(ctx context.Context, api *APIClient, cfg *Config, messages *
 				return
 			case <-ticker.C:
 				n := atomic.LoadInt64(&charsReceived)
-				label := "thinking..."
+				var label string
 				if n > 0 {
 					label = "receiving... " + formatChars(int(n))
+				} else {
+					// Typing indicator: cycle . / .. / ... every 3 frames (~240ms)
+					dots := (i/3)%3 + 1
+					label = strings.Repeat(".", dots)
 				}
 				fmt.Printf("\r  %s %s",
 					styleSpinner.Render(frames[i]),
@@ -97,6 +101,14 @@ func executeToolCall(tc ToolCall, cfg *Config, mcp *MCPClient) string {
 		return output
 	}
 
+	// Try user-defined plugins
+	if _, ok := pluginCommands[name]; ok {
+		fmt.Printf("\r\033[K  %s", styleInfo.Render("⚙ "+name+"..."))
+		output := executePlugin(name, args)
+		fmt.Print("\r\033[K")
+		return output
+	}
+
 	return fmt.Sprintf("unknown tool: %s", name)
 }
 
@@ -109,5 +121,10 @@ func buildTools(cfg *Config, mcp *MCPClient) []Tool {
 	if mcp != nil {
 		tools = append(tools, mcp.Tools()...)
 	}
+	// Lazy-load plugins once
+	if pluginTools == nil {
+		pluginTools = loadPlugins()
+	}
+	tools = append(tools, pluginTools...)
 	return tools
 }
