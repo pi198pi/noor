@@ -1,6 +1,6 @@
 # noor
 
-A terminal chat client powered by [OpenRouter](https://openrouter.ai), built in Go with [Charm](https://charm.sh) libraries.
+A terminal chat client powered by [OpenRouter](https://openrouter.ai), built in Go with [Charm](https://charm.land/) libraries.
 
 ## Features
 
