@@ -34,43 +34,49 @@ func pluginsDir() string {
 	return filepath.Join(home, ".config", AppName, "plugins")
 }
 
-// loadPlugins scans ~/.config/noor/plugins/*.json and returns Tool
-// definitions for each valid plugin. Invalid plugins are logged and skipped.
+// loadPlugins recursively scans ~/.config/noor/plugins/ and all subdirs
+// for *.json files. Each subdirectory acts as a category (purely cosmetic —
+// the tool name must be unique across all plugins).
 func loadPlugins() []Tool {
 	dir := pluginsDir()
 	if dir == "" {
 		return nil
 	}
 
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		if !os.IsNotExist(err) {
-			Log.Debug("plugins dir read error", "err", err)
+	var tools []Tool
+	var files []string
+
+	// Walk all subdirectories, depth-first
+	_ = filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			Log.Debug("plugins walk error", "path", path, "err", err)
+			return nil
+		}
+		if d.IsDir() {
+			return nil
+		}
+		if filepath.Ext(d.Name()) == ".json" {
+			files = append(files, path)
 		}
 		return nil
-	}
+	})
 
-	var tools []Tool
-	for _, e := range entries {
-		if e.IsDir() || filepath.Ext(e.Name()) != ".json" {
-			continue
-		}
-
-		path := filepath.Join(dir, e.Name())
+	for _, path := range files {
+		name := filepath.Base(path)
 		data, err := os.ReadFile(path)
 		if err != nil {
-			Log.Debug("plugin read error", "file", e.Name(), "err", err)
+			Log.Debug("plugin read error", "file", name, "err", err)
 			continue
 		}
 
 		var p Plugin
 		if err := json.Unmarshal(data, &p); err != nil {
-			Log.Debug("plugin parse error", "file", e.Name(), "err", err)
+			Log.Debug("plugin parse error", "file", name, "err", err)
 			continue
 		}
 
 		if p.Name == "" || p.Command == "" {
-			Log.Debug("plugin missing name or command", "file", e.Name())
+			Log.Debug("plugin missing name or command", "file", name)
 			continue
 		}
 
@@ -85,7 +91,7 @@ func loadPlugins() []Tool {
 				Parameters:  p.Parameters,
 			},
 		})
-		Log.Debug("plugin loaded", "name", p.Name, "file", e.Name())
+		Log.Debug("plugin loaded", "name", p.Name, "file", name)
 	}
 
 	return tools

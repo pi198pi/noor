@@ -99,12 +99,17 @@ func parseFlags() Config {
 	flag.BoolVar(&cfg.Debug, "debug", false, "Enable debug logging to stderr")
 
 	showVer := flag.Bool("version", false, "Show version")
+	listModels := flag.Bool("list-models", false, "List available models and exit")
 
 	flag.Usage = showHelpText
 	flag.Parse()
 
 	if *showVer {
 		fmt.Printf("%s %s\n", AppName, AppVersion)
+		os.Exit(0)
+	}
+	if *listModels {
+		printModelList()
 		os.Exit(0)
 	}
 

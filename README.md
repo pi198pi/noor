@@ -36,6 +36,14 @@ make install
 
 This builds and copies the binary to `~/.local/bin/noor`.
 
+## Validate your setup
+
+```bash
+noor config validate
+```
+
+Checks config file, API keys (OpenRouter + TinyFish), plugin syntax, and template compilation. Exit code 1 if anything is broken.
+
 ## Configuration
 
 Create `~/.config/noor/config` once:
@@ -67,6 +75,7 @@ noor --mcp-server "python3 mcp_security.py"  # with MCP server
 |---|---|
 | `-h, --help` | Show help |
 | `--version` | Show version |
+| `--list-models` | List available models and exit |
 | `-c, --config FILE` | Custom config file |
 | `-S, --style STYLE` | Response style: `markdown`, `plain`, `concise`, `raw` |
 | `-p, --system-prompt STR` | Set system prompt |
@@ -102,6 +111,8 @@ noor --mcp-server "python3 mcp_security.py"  # with MCP server
 | `/compress` | Summarize older messages to free up context window |
 | `/freeze` | Export last code block to PNG (requires [`freeze`](https://github.com/charmbracelet/freeze)) |
 | `/attach` | Pick a file via filepicker to include with your next message |
+| `config validate` | Validate config, API keys, and plugins (run as `noor config validate`) |
+| `--list-models` | List available models and exit (run as `noor --list-models`) |
 | `weather <city>` | Live weather for any location |
 | `@<ref>` | Include file/URL/git as context (see References below) |
 | `exit` | Quit (shows session cost) |
@@ -163,17 +174,87 @@ explain what @main.go does and how it differs from @diff
 
 ## Footer
 
-After each reply:
+After each reply, a compact two-line footer shows timing, token usage, cost, and context usage:
+
 ```
-1.2s  ·  342 tokens  ·  $0.0003
-████░░░░░░░░  4% · 8K used · 192K left
+  ◷ 1.2s  ◈ 342t  ↟ 285 t/s  Σ $0.0003
+  ██████░░░░░░  8K/128K
 ```
+
+| Icon | Meaning |
+|---|---|
+| `◷` | Elapsed time |
+| `◈` | Token count |
+| `↟` | Tokens per second |
+| `Σ` | Session cost total |
+
+Line 2 shows a 12-segment context bar (each block ≈8.3%) with `used/total` in human-readable form (e.g. `8K/128K`). When context exceeds 80%, a warning appears above the footer.
 
 On `exit`:
 ```
 session cost: $0.0012
 goodbye
 ```
+
+## Plugins
+
+Drop JSON files in `~/.config/noor/plugins/` to add custom shell-based tools to noor. Organize them under subdirectories (e.g. `tools/system/`, `tools/dev/`, `tools/data/`) — **noor scans recursively** so any folder structure works. Each plugin defines a tool name, description, parameter schema, and a shell command (Go `text/template` with `{{.param}}` placeholders). Commands run via `sh -c` with a 30s timeout.
+
+### Schema
+
+```json
+{
+  "name": "tool_name",
+  "description": "What this tool does",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "arg": { "type": "string", "description": "..." }
+    },
+    "required": ["arg"]
+  },
+  "command": "echo '{{.arg}}'"
+}
+```
+
+### Built-in Plugins
+
+#### System & Diagnostics
+
+| Tool | Description |
+|---|---|
+| `dns_lookup` | Query DNS records via Google DNS-over-HTTPS |
+| `disk_usage` | Analyze disk usage by directory with depth control |
+| `system_uptime` | Show system uptime and load average |
+| `network_info` | Show interfaces, IP addresses, and default gateway |
+| `port_check` | Check if a TCP port is open on a remote host |
+| `process_list` | List running processes sorted by CPU usage |
+| `ssl_cert` | Check SSL/TLS certificate details and expiry dates |
+
+#### Development
+
+| Tool | Description |
+|---|---|
+| `sqlite_query` | Run read-only SQL on any SQLite `.db` file |
+| `git_log` | Show recent git commit history |
+| `git_diff` | Show git diff summary between branches/commits |
+| `find_files` | Find files by name pattern in a directory tree |
+| `json_validate` | Validate and pretty-print a JSON string |
+| `hash_file` | Compute SHA-256 and MD5 checksums of a file |
+
+#### Data & Utilities
+
+| Tool | Description |
+|---|---|
+| `count_words` | Count words, lines, and characters in text |
+| `random_number` | Generate random integers in a range |
+| `timestamp` | Current UTC time in ISO 8601 format |
+| `video_info` | Extract codec, resolution, and bitrate from video files |
+| `uuid` | Generate a random UUID v4 |
+| `http_get` | Make an HTTP GET request and return status + body |
+| `base64` | Encode or decode text using Base64 |
+| `date_convert` | Convert between Unix timestamps and readable dates |
+| `extract_text` | Extract plain text from PDF/DOCX/ODT files |
 
 ## Development
 
@@ -182,6 +263,7 @@ make build     # build locally
 make install   # build + install to ~/.local/bin
 make uninstall # remove from PATH
 make clean     # delete local binary
+go test ./...  # run test suite
 ```
 
 ## Session History

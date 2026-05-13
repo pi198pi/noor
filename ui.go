@@ -258,24 +258,22 @@ func formatCost(c float64) string {
 // ─── Assistant Footer ─────────────────────────────────────────────────────────
 
 func assistantFooter(elapsed time.Duration, tokens int, ctxTokens int, model string, cost float64, sessionTotal float64) {
-	// Line 1: timing · tokens · rate · cost · total
-	parts := []string{styleTemp.Render(fmt.Sprintf("%.1fs", elapsed.Seconds()))}
+	// Line 1: timing · tokens · rate · session total
+	// Uses unicode icons as separators: ◷ time, ◈ tokens, ↟ rate, Σ cost
+	parts := []string{styleTemp.Render(fmt.Sprintf("◷ %.1fs", elapsed.Seconds()))}
 	if tokens > 0 {
-		parts = append(parts, styleTemp.Render(fmt.Sprintf("%dt", tokens)))
+		parts = append(parts, styleTemp.Render(fmt.Sprintf("◈ %dt", tokens)))
 		if elapsed.Seconds() > 0 {
 			rate := float64(tokens) / elapsed.Seconds()
-			parts = append(parts, styleTemp.Render(fmt.Sprintf("%.0f t/s", rate)))
+			parts = append(parts, styleTemp.Render(fmt.Sprintf("↟ %.0f t/s", rate)))
 		}
 	}
-	if s := formatCost(cost); s != "" {
-		parts = append(parts, styleSuccess.Render(s))
-	}
 	if sessionTotal > 0 {
-		parts = append(parts, styleDim.Render(formatCost(sessionTotal)+" total"))
+		parts = append(parts, styleSuccess.Render(fmt.Sprintf("Σ %s", formatCost(sessionTotal))))
 	}
-	fmt.Printf("%s\n", styleDim.Render(strings.Join(parts, "  ·  ")))
+	fmt.Printf("  %s\n", styleDim.Render(strings.Join(parts, "  ")))
 
-	// Line 2: context bar
+	// Line 2: compact context bar
 	window := ctxWindowForModel(model)
 	used := ctxTokens
 	remaining := window - used
@@ -290,8 +288,8 @@ func assistantFooter(elapsed time.Duration, tokens int, ctxTokens int, model str
 		fmt.Println(styleWarning.Render("  " + warnMsg))
 	}
 
-	// Render a compact ASCII progress bar
-	barWidth := 20
+	// Render a compact 12-segment progress bar (~8.3% per segment)
+	barWidth := 12
 	filled := int(math.Round(pct * float64(barWidth)))
 	if filled > barWidth {
 		filled = barWidth
@@ -299,14 +297,9 @@ func assistantFooter(elapsed time.Duration, tokens int, ctxTokens int, model str
 	bar := styleCtxBar.Render(strings.Repeat("█", filled))
 	empty := styleDim.Render(strings.Repeat("░", barWidth-filled))
 
-	pctStr := fmt.Sprintf("%d%%", int(pct*100))
-	if pct < 0.01 {
-		pctStr = fmt.Sprintf("%.1f%%", pct*100)
-	}
 	fmt.Printf("  %s%s  %s\n",
 		bar, empty,
-		styleDim.Render(fmt.Sprintf("%s  ·  %s used  ·  %s left",
-			pctStr, formatCtx(used), formatCtx(remaining))),
+		styleDim.Render(fmt.Sprintf("%s/%s", formatCtx(used), formatCtx(window))),
 	)
 }
 
@@ -410,12 +403,14 @@ func showHelpText() {
 	fmt.Println(bannerStyle.Render(fmt.Sprintf("⬡ %s %s", AppName, AppVersion)))
 	fmt.Println()
 	fmt.Println(styleBold.Render("USAGE"))
-	fmt.Printf("  %s [options]\n\n", styleCmd.Render(AppName))
+	fmt.Printf("  %s [options]\n", styleCmd.Render(AppName))
+	fmt.Printf("  %s config validate\n\n", styleCmd.Render(AppName))
 
 	fmt.Println(styleBold.Render("OPTIONS"))
 	opts := [][2]string{
 		{"-h, --help", "Show this help"},
 		{"--version", "Show version"},
+		{"--list-models", "List available models and exit"},
 		{"-c, --config FILE", "Custom config file"},
 		{"-S, --style STYLE", "Response style: markdown, plain, concise, raw"},
 		{"-p, --system-prompt STR", "Set system prompt"},
@@ -461,6 +456,10 @@ func showHelpText() {
 	for _, c := range cmds {
 		fmt.Printf("  %-28s %s\n", styleCmd.Render(c[0]), styleDim.Render(c[1]))
 	}
+
+	fmt.Println()
+	fmt.Println(styleBold.Render("SUBCOMMANDS"))
+	fmt.Printf("  %-28s %s\n", styleCmd.Render("config validate"), styleDim.Render("Validate config, API keys, and plugins"))
 
 	fmt.Println()
 	fmt.Println(styleBold.Render("ENVIRONMENT"))

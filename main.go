@@ -6,6 +6,15 @@ import (
 )
 
 func main() {
+	// Subcommand: noor config validate
+	if len(os.Args) >= 3 && os.Args[1] == "config" && os.Args[2] == "validate" {
+		errs := validateConfig()
+		if errs > 0 {
+			os.Exit(1)
+		}
+		return
+	}
+
 	cfg := parseFlags()
 	loadConfig(&cfg)
 
